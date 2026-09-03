@@ -1,0 +1,46 @@
+name: Validate catalogue
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install jsonschema
+        run: pip install "jsonschema>=4.0"
+
+      - name: Validate catalogue.json
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from jsonschema import Draft202012Validator
+
+          root = Path(".")
+          data = json.loads(root.joinpath("catalogue.json").read_text(encoding="utf-8"))
+          schema = json.loads(root.joinpath("schema/catalogue.schema.json").read_text(encoding="utf-8"))
+          Draft202012Validator(schema).validate(data)
+
+          plugins = data.get("plugins") or []
+          ids = []
+          repos = []
+          for p in plugins:
+              pid = p["id"]
+              repo = p["repository"]
+              if pid in ids:
+                  raise SystemExit(f"duplicate plugin id: {pid}")
+              if repo in repos:
+                  raise SystemExit(f"duplicate repository: {repo}")
+              ids.append(pid)
+              repos.append(repo)
+          print(f"OK: {len(plugins)} plugin(s)")
+          PY

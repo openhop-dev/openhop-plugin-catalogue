@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "plugins": [
+    {
+      "id": "openhop.nomad",
+      "name": "NOMAD Bridge",
+      "description": "Connects an openHop Companion identity to Project N.O.M.A.D.",
+      "repository": "openhop-dev/openhop-nomad-plugin",
+      "category": "integration"
+    }
+  ]
+}
