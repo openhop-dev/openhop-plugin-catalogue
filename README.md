@@ -40,19 +40,23 @@ Publishing a plugin release does not automatically approve it. Approval requires
   "schema": 2,
   "plugins": [
     {
-      "id": "openhop.nomad",
-      "name": "NOMAD Bridge",
-      "description": "Connects an openHop Companion identity to Project N.O.M.A.D.",
-      "repository": "openhop-dev/openhop-nomad-plugin",
-      "distribution": "openhop-nomad-plugin",
-      "source_revision": "4b061aa0bd975ad8e90cf32ced94ccb5599f96d0",
-      "version": "0.1.1",
-      "wheel_url": "https://repeater-plugins.openhop.dev/plugins/openhop.nomad/0.1.1/openhop_nomad_plugin-0.1.1-py3-none-any.whl",
-      "sha256": "6576a9d737cfefd11e17cd982a8a3d3ccffdbff342b489dcea95d8670b0ca9e7"
+      "id": "example.plugin",
+      "name": "Example Plugin",
+      "description": "Example catalogue entry.",
+      "repository": "example-org/example-plugin",
+      "distribution": "example-plugin",
+      "source_revision": "0123456789abcdef0123456789abcdef01234567",
+      "version": "1.2.3",
+      "wheel_url": "https://repeater-plugins.openhop.dev/plugins/example.plugin/1.2.3/example_plugin-1.2.3-py3-none-any.whl",
+      "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
     }
   ]
 }
 ```
+
+The example above is illustrative. Current approvals belong only in
+[`catalogue.json`](catalogue.json), so the README does not duplicate live plugin
+versions, URLs, or checksums.
 
 | Field | Required | Notes |
 |-------|----------|-------|
