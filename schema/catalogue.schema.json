@@ -1,17 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://openhop.dev/schemas/plugin-catalogue-v1.json",
+  "$id": "https://openhop.dev/schemas/plugin-catalogue-v2.json",
   "title": "openHop Plugin Catalogue",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "schema",
-    "plugins"
-  ],
+  "required": ["schema", "plugins"],
   "properties": {
     "schema": {
       "type": "integer",
-      "const": 1
+      "const": 2
     },
     "plugins": {
       "type": "array",
@@ -22,7 +19,12 @@
           "id",
           "name",
           "description",
-          "repository"
+          "repository",
+          "distribution",
+          "source_revision",
+          "version",
+          "wheel_url",
+          "sha256"
         ],
         "properties": {
           "id": {
@@ -41,15 +43,49 @@
             "type": "string",
             "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
           },
+          "distribution": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+          },
+          "source_revision": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{40}$"
+          },
           "category": {
             "type": "string",
             "minLength": 1
           },
           "logo": {
             "type": "string",
-            "minLength": 1,
-            "description": "HTTPS URL to a plugin logo/icon image (png/svg/webp).",
             "pattern": "^https://"
+          },
+          "version": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-(?:[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+          },
+          "wheel_url": {
+            "type": "string",
+            "pattern": "^https://repeater-plugins\\.openhop\\.dev/plugins/"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "min_repeater_version": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+          },
+          "homepage": {
+            "type": "string",
+            "pattern": "^https://"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
           }
         }
       }
