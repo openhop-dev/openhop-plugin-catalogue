@@ -2,5 +2,3 @@
 !catalogue.json
 !schema/
 !schema/catalogue.schema.json
-!plugins/
-!plugins/**
