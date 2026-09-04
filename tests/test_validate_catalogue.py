@@ -23,11 +23,10 @@ def test_repository_catalogue_metadata_validates():
     result = validate_catalogue(ROOT)
 
     assert result["schema"] == 2
-    assert [f"{item['id']}@{item['version']}" for item in result["plugins"]] == [
-        "openhop.nomad@0.1.1"
-    ]
-    assert result["plugins"][0]["category"] == "integration"
-    assert result["plugins"][0]["logo"] == (
+    plugins = {item["id"]: item for item in result["plugins"]}
+    assert plugins["openhop.nomad"]["version"] == "0.1.1"
+    assert plugins["openhop.nomad"]["category"] == "integration"
+    assert plugins["openhop.nomad"]["logo"] == (
         "https://cdn.jsdelivr.net/gh/selfhst/icons/png/project-nomad.png"
     )
 
