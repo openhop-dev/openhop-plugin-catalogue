@@ -6,7 +6,8 @@
       "name": "NOMAD Bridge",
       "description": "Connects an openHop Companion identity to Project N.O.M.A.D.",
       "repository": "openhop-dev/openhop-nomad-plugin",
-      "category": "integration"
+      "category": "integration",
+      "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons/png/project-nomad.png"
     }
   ]
 }

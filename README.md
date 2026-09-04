@@ -36,7 +36,8 @@ openHop Plugin Manager    →  install / enable / run / update
       "name": "NOMAD Bridge",
       "description": "Connects an openHop Companion identity to Project N.O.M.A.D.",
       "repository": "openhop-dev/openhop-nomad-plugin",
-      "category": "integration"
+      "category": "integration",
+      "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons/png/project-nomad.png"
     }
   ]
 }
@@ -49,6 +50,7 @@ openHop Plugin Manager    →  install / enable / run / update
 | `description` | yes | Short summary |
 | `repository` | yes | `owner/repo` (not a full URL) |
 | `category` | no | Free-form label (e.g. `integration`) |
+| `logo` | no | HTTPS URL to a logo/icon shown in the catalogue UI |
 
 Do **not** put `latest_version`, download URLs, or wheel filenames here.
 

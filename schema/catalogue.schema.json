@@ -4,7 +4,10 @@
   "title": "openHop Plugin Catalogue",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "plugins"],
+  "required": [
+    "schema",
+    "plugins"
+  ],
   "properties": {
     "schema": {
       "type": "integer",
@@ -15,7 +18,12 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "name", "description", "repository"],
+        "required": [
+          "id",
+          "name",
+          "description",
+          "repository"
+        ],
         "properties": {
           "id": {
             "type": "string",
@@ -36,6 +44,12 @@
           "category": {
             "type": "string",
             "minLength": 1
+          },
+          "logo": {
+            "type": "string",
+            "minLength": 1,
+            "description": "HTTPS URL to a plugin logo/icon image (png/svg/webp).",
+            "pattern": "^https://"
           }
         }
       }
