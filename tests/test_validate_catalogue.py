@@ -26,6 +26,20 @@ def test_repository_catalogue_metadata_validates():
     assert [f"{item['id']}@{item['version']}" for item in result["plugins"]] == [
         "openhop.nomad@0.1.1"
     ]
+    assert result["plugins"][0]["category"] == "integration"
+    assert result["plugins"][0]["logo"] == (
+        "https://cdn.jsdelivr.net/gh/selfhst/icons/png/project-nomad.png"
+    )
+
+
+@pytest.mark.parametrize("field", ["category", "logo"])
+def test_display_metadata_is_required(tmp_path: Path, field: str):
+    data = _copy_catalogue(tmp_path)
+    del data["plugins"][0][field]
+    (tmp_path / "catalogue.json").write_text(json.dumps(data), encoding="utf-8")
+
+    with pytest.raises(jsonschema.ValidationError, match="required"):
+        validate_catalogue(tmp_path)
 
 
 def test_repository_contains_no_wheel_artifacts():
