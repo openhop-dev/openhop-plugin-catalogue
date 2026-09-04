@@ -46,6 +46,8 @@ Publishing a plugin release does not automatically approve it. Approval requires
       "name": "Example Plugin",
       "description": "Example catalogue entry.",
       "repository": "example-org/example-plugin",
+      "category": "integration",
+      "logo": "https://example.org/example-plugin.png",
       "distribution": "example-plugin",
       "source_revision": "0123456789abcdef0123456789abcdef01234567",
       "version": "1.2.3",
@@ -68,8 +70,8 @@ versions, URLs, or checksums.
 | `repository` | yes | Source repository as `owner/repo` |
 | `distribution` | yes | Python distribution name used by the wheel |
 | `source_revision` | yes | Exact 40-character source commit used to build the wheel |
-| `category` | no | Free-form catalogue category |
-| `logo` | no | HTTPS URL to a catalogue icon |
+| `category` | yes | Catalogue grouping and ordering category |
+| `logo` | yes | HTTPS URL to the plugin card image |
 | `version` | yes | Currently approved plugin version |
 | `wheel_url` | yes | Exact wheel asset on the plugin repository's GitHub Release |
 | `sha256` | yes | Lowercase SHA-256 digest of the approved published wheel |
