@@ -1,85 +1,119 @@
 # openHop Plugin Catalogue
 
-A **small, curated, static catalogue** of openHop Repeater plugins.
+A small, curated catalogue of approved openHop Repeater plugin releases.
 
-The catalogue tells a Repeater:
+The repository is the source of truth for:
 
-- which plugins exist
-- display name / description / category
-- which GitHub repository publishes them
-
-It does **not** store versions, download URLs, or release assets.
+- which plugins are available;
+- the single currently approved version of each plugin;
+- the immutable source revision, exact R2 wheel URL, and SHA-256 digest;
+- the wheel artifact published to the R2-backed plugin origin.
 
 ## Design
 
 ```text
-openHop Plugin Catalogue  →  repository metadata only
+Catalogue PR and review
         │
-        ▼
-GitHub Releases           →  versions, wheels, release notes
-        │
-        ▼
-openHop Plugin Manager    →  install / enable / run / update
+        ├── catalogue.json approves source revision, version, URL, and SHA-256
+        └── plugins/.../*.whl contains the exact approved artifact
+                         │
+                         ▼
+https://repeater-plugins.openhop.dev
+                         │
+                         ▼
+openHop Plugin Manager verifies SHA-256, installs, enables, and runs
 ```
 
-> **Updating a plugin does not require changing this catalogue.**  
-> Publish a new GitHub Release on the plugin repository instead.
+Publishing a GitHub Release does not automatically approve a plugin update.
+Approval requires a reviewed catalogue change containing the exact wheel and
+matching checksum. This keeps version promotion under openHop's control and
+removes the Repeater's dependency on GitHub API rate limits.
 
-## Catalogue entry format (schema 1)
+## Catalogue entry format (schema 2)
 
 ```json
 {
-  "schema": 1,
+  "schema": 2,
   "plugins": [
     {
       "id": "openhop.nomad",
       "name": "NOMAD Bridge",
       "description": "Connects an openHop Companion identity to Project N.O.M.A.D.",
       "repository": "openhop-dev/openhop-nomad-plugin",
-      "category": "integration",
-      "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons/png/project-nomad.png"
+      "distribution": "openhop-nomad-plugin",
+      "source_revision": "4b061aa0bd975ad8e90cf32ced94ccb5599f96d0",
+      "version": "0.1.1",
+      "wheel_url": "https://repeater-plugins.openhop.dev/plugins/openhop.nomad/0.1.1/openhop_nomad_plugin-0.1.1-py3-none-any.whl",
+      "sha256": "6576a9d737cfefd11e17cd982a8a3d3ccffdbff342b489dcea95d8670b0ca9e7"
     }
   ]
 }
 ```
 
 | Field | Required | Notes |
-|-------|----------|--------|
-| `id` | yes | Must match the plugin's `openhop-plugin.json` `id` |
+|-------|----------|-------|
+| `id` | yes | Must match the wheel's `openhop-plugin.json` `id` |
 | `name` | yes | Display name |
 | `description` | yes | Short summary |
-| `repository` | yes | `owner/repo` (not a full URL) |
-| `category` | no | Free-form label (e.g. `integration`) |
-| `logo` | no | HTTPS URL to a logo/icon shown in the catalogue UI |
+| `repository` | yes | Source repository as `owner/repo` |
+| `distribution` | yes | Python distribution name in the wheel filename and `METADATA` |
+| `source_revision` | yes | Exact 40-character source commit used to build the wheel |
+| `category` | no | Free-form label such as `integration` |
+| `logo` | no | HTTPS URL to a catalogue icon |
+| `version` | yes | Currently approved plugin version |
+| `wheel_url` | yes | Exact wheel under the approved R2 origin and version path |
+| `sha256` | yes | Lowercase SHA-256 digest of the approved wheel |
 
-Do **not** put `latest_version`, download URLs, or wheel filenames here.
+## Artifact layout
 
-## Plugin requirements
+```text
+plugins/
+└── openhop.nomad/
+    └── 0.1.1/
+        └── openhop_nomad_plugin-0.1.1-py3-none-any.whl
+```
 
-1. Ship an `openhop-plugin.json` manifest (schema 1) whose `id` matches the catalogue entry.
-2. Publish **GitHub Releases** with tags like `v1.2.3`.
-3. Attach exactly one installable `*.whl` asset per stable release (draft/prerelease ignored by default).
+The public URL mirrors that repository path:
 
-## How to submit a plugin
+```text
+https://repeater-plugins.openhop.dev/plugins/openhop.nomad/0.1.1/openhop_nomad_plugin-0.1.1-py3-none-any.whl
+```
 
-1. Build and publish your openHop plugin with GitHub Releases + a wheel asset.
-2. Open a PR against this repository adding one object to `catalogue.json`.
-3. CI validates JSON schema, unique IDs, and unique repositories (no network calls).
-4. After merge, Repeaters discover the plugin from:
+## Approving a plugin version
 
-   `https://raw.githubusercontent.com/openhop-dev/openhop-plugin-catalogue/main/catalogue.json`
+1. Obtain the wheel from the exact reviewed `source_revision`.
+2. Inspect its embedded `openhop-plugin.json`.
+3. Add the wheel under `plugins/<id>/<version>/`.
+4. Set the matching `distribution`, `source_revision`, `version`, `wheel_url`,
+   and `sha256` in `catalogue.json`.
+5. Open a PR. CI validates:
+   - JSON schema;
+   - unique plugin IDs and exact equality between catalogue artifacts and
+     everything publishable under `plugins/`;
+   - R2-only URL layout;
+   - local artifact presence;
+   - SHA-256 equality;
+   - wheel filename, `METADATA`, `RECORD`, and embedded manifest identity;
+   - runtime dependencies use exact package versions or immutable VCS commits.
+6. Merge the approved change to `main`. The external catalogue Worker watches
+   the repository and publishes the allowed assets to R2; no deployment GitHub
+   Action is involved.
 
-## What this is not
+Repeaters read the catalogue from:
 
-- Not a package registry or backend service
-- Not a marketplace (no ratings, payments, or auto-approval)
-- Not the version source — **GitHub Releases are**
+```text
+https://repeater-plugins.openhop.dev/catalogue.json
+```
 
 ## Local validation
 
 ```bash
-pip install 'jsonschema>=4.0'
-python -c "import json; from jsonschema import Draft202012Validator; \
-  d=json.load(open('catalogue.json')); s=json.load(open('schema/catalogue.schema.json')); \
-  Draft202012Validator(s).validate(d); print('OK')"
+uv run --no-project --isolated --with pytest --with jsonschema \
+  --with packaging --with wheel \
+  python -m pytest -q
+uv run --no-project --isolated --with jsonschema --with packaging --with wheel \
+  python scripts/validate_catalogue.py
 ```
+
+Or install `pytest`, `jsonschema`, `packaging`, and `wheel` in a virtual
+environment and run the same Python commands directly.
