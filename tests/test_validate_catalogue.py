@@ -32,12 +32,12 @@ def test_repository_contains_no_wheel_artifacts():
     assert list(ROOT.rglob("*.whl")) == []
 
 
-def test_non_r2_wheel_url_is_rejected(tmp_path: Path):
+def test_non_github_release_wheel_url_is_rejected(tmp_path: Path):
     data = _copy_catalogue(tmp_path)
     data["plugins"][0]["wheel_url"] = "https://example.com/plugin.whl"
     (tmp_path / "catalogue.json").write_text(json.dumps(data), encoding="utf-8")
 
-    with pytest.raises(jsonschema.ValidationError, match="repeater-plugins"):
+    with pytest.raises(jsonschema.ValidationError, match="github"):
         validate_catalogue(tmp_path)
 
 
@@ -50,14 +50,25 @@ def test_wheel_url_query_is_rejected(tmp_path: Path):
         validate_catalogue(tmp_path)
 
 
-def test_wheel_url_version_path_must_match_approved_version(tmp_path: Path):
+def test_wheel_url_repository_must_match_catalogue_repository(tmp_path: Path):
     data = _copy_catalogue(tmp_path)
     data["plugins"][0]["wheel_url"] = data["plugins"][0]["wheel_url"].replace(
-        "/0.1.1/", "/9.9.9/"
+        "openhop-dev/openhop-nomad-plugin", "someone-else/other-plugin"
     )
     (tmp_path / "catalogue.json").write_text(json.dumps(data), encoding="utf-8")
 
-    with pytest.raises(CatalogueValidationError, match="must be under"):
+    with pytest.raises(CatalogueValidationError, match="release asset"):
+        validate_catalogue(tmp_path)
+
+
+def test_wheel_filename_version_must_match_approved_version(tmp_path: Path):
+    data = _copy_catalogue(tmp_path)
+    data["plugins"][0]["wheel_url"] = data["plugins"][0]["wheel_url"].replace(
+        "openhop_nomad_plugin-0.1.1", "openhop_nomad_plugin-9.9.9"
+    )
+    (tmp_path / "catalogue.json").write_text(json.dumps(data), encoding="utf-8")
+
+    with pytest.raises(CatalogueValidationError, match="filename version"):
         validate_catalogue(tmp_path)
 
 

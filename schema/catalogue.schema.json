@@ -65,7 +65,7 @@
           },
           "wheel_url": {
             "type": "string",
-            "pattern": "^https://repeater-plugins\\.openhop\\.dev/plugins/"
+            "pattern": "^https://github\\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/releases/download/"
           },
           "sha256": {
             "type": "string",

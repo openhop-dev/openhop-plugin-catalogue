@@ -11,7 +11,7 @@ import jsonschema
 from packaging.utils import canonicalize_name, parse_wheel_filename
 
 ROOT = Path(__file__).resolve().parents[1]
-APPROVED_ORIGIN = "https://repeater-plugins.openhop.dev"
+APPROVED_DOWNLOAD_ORIGIN = "https://github.com"
 
 
 class CatalogueValidationError(ValueError):
@@ -21,27 +21,32 @@ class CatalogueValidationError(ValueError):
 def _validate_wheel_url(plugin: dict) -> None:
     wheel_url = plugin["wheel_url"]
     parsed = urlparse(wheel_url)
-    if f"{parsed.scheme}://{parsed.netloc}" != APPROVED_ORIGIN:
+    if f"{parsed.scheme}://{parsed.netloc}" != APPROVED_DOWNLOAD_ORIGIN:
         raise CatalogueValidationError(
-            f"wheel_url must use the approved R2 origin {APPROVED_ORIGIN}: {wheel_url}"
+            f"wheel_url must use a GitHub Release URL: {wheel_url}"
         )
     if parsed.params or parsed.query or parsed.fragment:
         raise CatalogueValidationError(
             f"wheel_url cannot contain params, query, or fragment: {wheel_url}"
         )
 
+    owner, repository = plugin["repository"].split("/", 1)
     path = Path(unquote(parsed.path))
-    expected_parent = Path("/plugins") / plugin["id"] / plugin["version"]
-    if path.parent != expected_parent or path.suffix != ".whl":
+    parts = path.parts
+    expected_prefix = ("/", owner, repository, "releases", "download")
+    if len(parts) != 7 or parts[:5] != expected_prefix or parts[5] in {"", ".", ".."}:
         raise CatalogueValidationError(
-            f"wheel_url must be under {APPROVED_ORIGIN}{expected_parent}/ and end in .whl"
+            f"wheel_url must point to a release asset in {plugin['repository']}"
         )
 
+    filename = parts[6]
+    if not filename.endswith(".whl"):
+        raise CatalogueValidationError("wheel_url release asset must end in .whl")
     try:
-        distribution, version, _build, _tags = parse_wheel_filename(path.name)
+        distribution, version, _build, _tags = parse_wheel_filename(filename)
     except Exception as exc:
         raise CatalogueValidationError(
-            f"invalid wheel filename in wheel_url: {path.name}"
+            f"invalid wheel filename in wheel_url: {filename}"
         ) from exc
     expected_distribution = canonicalize_name(plugin["distribution"])
     if distribution != expected_distribution:

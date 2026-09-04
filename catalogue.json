@@ -7,10 +7,10 @@
       "description": "Connects an openHop Companion identity to Project N.O.M.A.D.",
       "repository": "openhop-dev/openhop-nomad-plugin",
       "distribution": "openhop-nomad-plugin",
-      "source_revision": "4b061aa0bd975ad8e90cf32ced94ccb5599f96d0",
+      "source_revision": "3622722d6c4d59bcb83819a6b353f43dc93ffa0d",
       "version": "0.1.1",
-      "wheel_url": "https://repeater-plugins.openhop.dev/plugins/openhop.nomad/0.1.1/openhop_nomad_plugin-0.1.1-py3-none-any.whl",
-      "sha256": "6576a9d737cfefd11e17cd982a8a3d3ccffdbff342b489dcea95d8670b0ca9e7",
+      "wheel_url": "https://github.com/openhop-dev/openhop-nomad-plugin/releases/download/v01.1/openhop_nomad_plugin-0.1.1-py3-none-any.whl",
+      "sha256": "d04bd062c0e6cb5adddfa0ac492b64729de39f9dd865d98b0bd0a18f11d66093",
       "min_repeater_version": "0.3.0",
       "homepage": "https://github.com/openhop-dev/openhop-nomad-plugin",
       "tags": ["nomad", "bridge", "companion"]
