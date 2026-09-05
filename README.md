@@ -31,9 +31,14 @@ Repeater checks R2 for approved versions, then downloads the selected wheel
 straight from the plugin's GitHub Release
 ```
 
-The external Worker is not a GitHub Action in this repository. GitHub Actions here only validates catalogue metadata.
+The external Worker is not a GitHub Action in this repository. GitHub Actions
+validate metadata and implement the staged [catalogue-owned publishing policy](docs/publishing-policy.md).
 
-Publishing a plugin release does not automatically approve it. Approval requires a reviewed catalogue change naming the exact version, source revision, GitHub Release asset URL, and digest.
+Publishing a plugin release does not by itself approve it. Ordinary catalogue
+changes require current maintainer approval. The staged policy allows only narrowly
+scoped certified `waev.outpost` updates to qualify without that human review after
+an explicit, verified protection cutover. Automatic merging remains disabled until
+the activation checklist is completed; existing validation and human review stay in place.
 
 ## Catalogue entry format (schema 2)
 
