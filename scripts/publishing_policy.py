@@ -715,10 +715,15 @@ def enable_auto(api, receipt, target):
         pr["head"]["sha"] == receipt["head"] and api.main() == receipt["base"],
         "auto-enable refs changed",
     )
-    # A clean PR may reject enablePullRequestAutoMerge because it is immediately
-    # mergeable. Merge that exact head through the normal protected endpoint, with
-    # the non-bypass GITHUB_TOKEN; never fall back after an arbitrary API error.
-    if pr.get("mergeable") is True and pr.get("mergeable_state") == "clean":
+    # Optional running/failed checks (including this job) can make an otherwise
+    # eligible PR "unstable". Auto-merge enrollment may reject such a PR as
+    # immediately mergeable. Let the protected endpoint enforce required checks
+    # for either state, using the exact head and non-bypass GITHUB_TOKEN.
+    # Never fall back after a rejected merge or an arbitrary API error.
+    if pr.get("mergeable") is True and pr.get("mergeable_state") in {
+        "clean",
+        "unstable",
+    }:
         result = api.repo(
             f"/pulls/{receipt['number']}/merge",
             method="PUT",
@@ -836,6 +841,10 @@ def main():
         )
         run(sys.argv[1])
         return 0
+    except PolicyError as exc:
+        # PolicyError messages are trusted-code literals, never API response text.
+        print(f"Publishing policy failed closed (PolicyError): {exc}.", file=sys.stderr)
+        return 1
     except Exception as exc:
         print(
             f"Publishing policy failed closed ({type(exc).__name__}).", file=sys.stderr
