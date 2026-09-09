@@ -6,7 +6,6 @@ from pathlib import Path
 
 import jsonschema
 import pytest
-
 from scripts.validate_catalogue import CatalogueValidationError, validate_catalogue
 
 ROOT = Path(__file__).resolve().parents[1]
