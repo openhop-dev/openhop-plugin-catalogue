@@ -32,13 +32,19 @@ straight from the plugin's GitHub Release
 ```
 
 The external Worker is not a GitHub Action in this repository. GitHub Actions
-validate metadata and implement the staged [catalogue-owned publishing policy](docs/publishing-policy.md).
+validate metadata and implement the [catalogue-owned publishing policy](docs/publishing-policy.md).
 
 Publishing a plugin release does not by itself approve it. Ordinary catalogue
-changes require current maintainer approval. The staged policy allows only narrowly
-scoped certified `waev.outpost` updates to qualify without that human review after
-an explicit, verified protection cutover. Automatic merging remains disabled until
-the activation checklist is completed; existing validation and human review stay in place.
+changes require current maintainer approval. Trusted-main registrations in
+[`approved-apps.json`](approved-apps.json) allow narrowly scoped `waev.outpost` and
+`openhop.nomad` release updates to qualify for the existing protected automatic
+merge pipeline without human review. A proposal cannot register itself or select
+its own package profile or configuration. Reusable `static-ui-v1` and
+`python-service-v1` profiles keep Python package/module and console-script contracts
+in trusted registration, so another app with the same layout needs no policy rewrite.
+The registry extension is local development until merged
+and verified on main; this documentation does not claim NOMAD automation is live.
+See the policy document for onboarding and operational prerequisites.
 
 ## Catalogue entry format (schema 2)
 
@@ -72,7 +78,7 @@ versions, URLs, or checksums.
 | `id` | yes | Plugin manifest ID |
 | `name` | yes | Display name |
 | `description` | yes | Short summary |
-| `repository` | yes | Source repository as `owner/repo` |
+| `repository` | yes | Public artifact repository as `owner/repo` (source can differ) |
 | `distribution` | yes | Python distribution name used by the wheel |
 | `source_revision` | yes | Exact 40-character source commit used to build the wheel |
 | `category` | yes | Catalogue grouping and ordering category |

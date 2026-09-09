@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "apps": [
+    {
+      "plugin": "waev.outpost",
+      "artifact_repository": "Treehouse-00/waev-outpost-plugin",
+      "source_repository": "Treehouse-00/pymc_console",
+      "distribution": "waev-outpost-plugin",
+      "wheel_basename": "waev_outpost_plugin",
+      "publisher_app_id": 4844131,
+      "publisher_login": "openhop-catalogue-publisher[bot]",
+      "publisher_user_id": 325431437,
+      "branch_prefix": "automation/waev-outpost-v",
+      "package_profile": "static-ui-v1",
+      "package_config": {},
+      "source_verification": "publisher-assertion",
+      "release_assets": "wheel-only"
+    },
+    {
+      "plugin": "openhop.nomad",
+      "artifact_repository": "openhop-dev/openhop-nomad-plugin",
+      "source_repository": "openhop-dev/openhop-nomad-plugin",
+      "distribution": "openhop-nomad-plugin",
+      "wheel_basename": "openhop_nomad_plugin",
+      "publisher_app_id": 4844131,
+      "publisher_login": "openhop-catalogue-publisher[bot]",
+      "publisher_user_id": 325431437,
+      "branch_prefix": "automation/openhop-nomad-v",
+      "package_profile": "python-service-v1",
+      "package_config": {
+        "package_root": "meshcore_nomad_bridge",
+        "module": "meshcore_nomad_bridge.main",
+        "console_script": "meshcore-nomad-bridge",
+        "callable": "main"
+      },
+      "source_verification": "public-tag",
+      "release_assets": "wheel-and-zip"
+    }
+  ]
+}

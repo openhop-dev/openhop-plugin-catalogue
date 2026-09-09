@@ -22,17 +22,8 @@ REPOSITORY = "openhop-dev/openhop-plugin-catalogue"
 POLICY_APP_ID = 4844315
 POLICY_APP_SLUG = "openhop-catalogue-policy"
 CHECK = "publishing-policy"
-CERTIFICATION = {
-    "plugin": "waev.outpost",
-    "artifact_repository": "Treehouse-00/waev-outpost-plugin",
-    "source_repository": "Treehouse-00/pymc_console",
-    "distribution": "waev-outpost-plugin",
-    "publisher_app_id": 4844131,
-    "publisher_login": "openhop-catalogue-publisher[bot]",
-    "publisher_user_id": 325431437,
-    "branch_prefix": "automation/waev-outpost-v",
-    "fields": frozenset({"version", "source_revision", "wheel_url", "sha256"}),
-}
+RELEASE_FIELDS = frozenset({"version", "source_revision", "wheel_url", "sha256"})
+REGISTRY_PATH = ROOT / "approved-apps.json"
 SHA = re.compile(r"[0-9a-f]{40}")
 VERSION = re.compile(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)")
 MAX_JSON = 4 * 1024 * 1024
@@ -59,10 +50,179 @@ def strict_json(data):
     return json.loads(data, object_pairs_hook=pairs)
 
 
+def load_registry(path=REGISTRY_PATH):
+    """Read only trusted checkout policy, never a registry from a proposal."""
+    try:
+        data = strict_json(Path(path).read_bytes())
+        require(
+            isinstance(data, dict) and set(data) == {"schema", "apps"},
+            "invalid registry",
+        )
+        require(
+            type(data["schema"]) is int and data["schema"] == 1,
+            "invalid registry schema",
+        )
+        require(
+            isinstance(data["apps"], list) and bool(data["apps"]),
+            "invalid registry apps",
+        )
+        keys = {
+            "plugin",
+            "artifact_repository",
+            "source_repository",
+            "distribution",
+            "wheel_basename",
+            "publisher_app_id",
+            "publisher_login",
+            "publisher_user_id",
+            "branch_prefix",
+            "package_profile",
+            "package_config",
+            "source_verification",
+            "release_assets",
+        }
+        result = {}
+        for c in data["apps"]:
+            require(
+                isinstance(c, dict) and set(c) == keys, "invalid registration fields"
+            )
+            require(
+                all(
+                    isinstance(v, str)
+                    for k, v in c.items()
+                    if k
+                    not in {"publisher_app_id", "publisher_user_id", "package_config"}
+                ),
+                "invalid registration types",
+            )
+            require(
+                re.fullmatch(r"[a-z][a-z0-9]*(?:[.-][a-z0-9]+)+", c["plugin"]),
+                "invalid plugin ID",
+            )
+            for field in ("artifact_repository", "source_repository"):
+                require(
+                    re.fullmatch(
+                        r"[A-Za-z0-9_-]+/[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*", c[field]
+                    ),
+                    "invalid repository",
+                )
+            require(
+                re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", c["distribution"]),
+                "invalid distribution",
+            )
+            require(
+                c["wheel_basename"] == c["distribution"].replace("-", "_"),
+                "invalid wheel basename",
+            )
+            require(
+                re.fullmatch(
+                    r"automation/[a-z0-9]+(?:-[a-z0-9]+)*-v", c["branch_prefix"]
+                ),
+                "invalid branch prefix",
+            )
+            require(
+                all(
+                    type(c[k]) is int and c[k] > 0
+                    for k in ("publisher_app_id", "publisher_user_id")
+                ),
+                "invalid publisher IDs",
+            )
+            require(
+                re.fullmatch(r"[a-z0-9-]+\[bot\]", c["publisher_login"]),
+                "invalid publisher login",
+            )
+            require(
+                c["package_profile"] in {"static-ui-v1", "python-service-v1"},
+                "unknown package profile",
+            )
+            config = c["package_config"]
+            require(isinstance(config, dict), "invalid package configuration")
+            if c["package_profile"] == "static-ui-v1":
+                require(not config, "static profile has no configuration")
+            else:
+                import keyword
+
+                require(
+                    set(config)
+                    == {"package_root", "module", "console_script", "callable"}
+                    and all(isinstance(v, str) for v in config.values()),
+                    "invalid Python package configuration",
+                )
+                for identifier in (config["package_root"], config["callable"]):
+                    require(
+                        re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", identifier)
+                        and not keyword.iskeyword(identifier),
+                        "invalid Python identifier",
+                    )
+                module = config["module"].split(".")
+                require(
+                    len(module) == 2
+                    and module[0] == config["package_root"]
+                    and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", module[-1])
+                    and not keyword.iskeyword(module[-1]),
+                    "module must be directly inside registered package",
+                )
+                require(
+                    re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", config["console_script"]),
+                    "invalid console script",
+                )
+            require(
+                c["source_verification"] in {"public-tag", "publisher-assertion"},
+                "unknown source verification",
+            )
+            require(
+                c["release_assets"] in {"wheel-only", "wheel-and-zip"},
+                "unknown asset contract",
+            )
+            require(
+                (c["source_repository"] == c["artifact_repository"])
+                == (c["source_verification"] == "public-tag"),
+                "source verification binding mismatch",
+            )
+            for old in result.values():
+                require(
+                    all(
+                        c[k] != old[k]
+                        for k in ("plugin", "artifact_repository", "branch_prefix")
+                    ),
+                    "ambiguous registration",
+                )
+            result[c["plugin"]] = c
+        return result
+    except (OSError, ValueError, TypeError, KeyError) as exc:
+        raise PolicyError("invalid registry") from exc
+
+
+def registration(plugin):
+    registry = load_registry()
+    require(isinstance(plugin, str) and plugin in registry, "unapproved plugin")
+    return registry[plugin]
+
+
+def item_registration(item):
+    c = registration(item["id"])
+    require(
+        item["repository"] == c["artifact_repository"]
+        and item["distribution"] == c["distribution"],
+        "registration identity mismatch",
+    )
+    return c
+
+
 def certified_entry(pr, files, base, candidate):
+    registry = (
+        load_registry()
+    )  # Malformed trusted policy denies even ordinary decisions.
+    matches = [
+        _certified_entry(pr, files, base, candidate, c) for c in registry.values()
+    ]
+    matches = [item for item in matches if item is not None]
+    return matches[0] if len(matches) == 1 else None
+
+
+def _certified_entry(pr, files, base, candidate, c):
     """A mismatch is an ordinary PR, never implicit certification."""
     try:
-        c = CERTIFICATION
         require(files == ["catalogue.json"])
         require(
             pr["user"]
@@ -98,10 +258,10 @@ def certified_entry(pr, files, base, candidate):
             SHA.fullmatch(new["source_revision"])
             and re.fullmatch(r"[0-9a-f]{64}", new["sha256"])
         )
-        require(new["wheel_url"] == wheel_url(new["version"]))
+        require(new["wheel_url"] == wheel_url(new["version"], c["plugin"]))
         restored = copy.deepcopy(candidate)
         replacement = next(x for x in restored["plugins"] if x["id"] == c["plugin"])
-        for field in c["fields"]:
+        for field in RELEASE_FIELDS:
             replacement[field] = old[field]
         require(restored == base)
         return new
@@ -109,11 +269,13 @@ def certified_entry(pr, files, base, candidate):
         return None
 
 
-def wheel_url(version):
+def wheel_url(version, plugin="waev.outpost"):
+    # Default retained for existing Outpost callers; policy always selects explicitly.
+    c = registration(plugin)
     require(isinstance(version, str) and VERSION.fullmatch(version), "invalid version")
     return (
-        f"https://github.com/{CERTIFICATION['artifact_repository']}/releases/download/"
-        f"v{version}/waev_outpost_plugin-{version}-py3-none-any.whl"
+        f"https://github.com/{c['artifact_repository']}/releases/download/"
+        f"v{version}/{c['wheel_basename']}-{version}-py3-none-any.whl"
     )
 
 
@@ -319,11 +481,30 @@ def verify_wheel(raw, item):
     )
     version = item["version"]
     require(VERSION.fullmatch(version), "invalid wheel version")
-    prefix = f"waev_outpost_plugin-{version}.dist-info/"
+    c = item_registration(item)
+    prefix = f"{c['wheel_basename']}-{version}.dist-info/"
     record = prefix + "RECORD"
     meta = prefix + "METADATA"
-    manifest_path = "share/openhop/plugins/waev.outpost/openhop-plugin.json"
-    required = {meta, record, "openhop-plugin.json", manifest_path, "ui/index.html"}
+    python_profile = c["package_profile"] == "python-service-v1"
+    if python_profile:
+        installed = f"{c['wheel_basename']}-{version}.data/data/share/openhop/plugins/{c['plugin']}/"
+        manifest_path = installed + "openhop-plugin.json"
+        required = {
+            meta,
+            record,
+            prefix + "WHEEL",
+            prefix + "entry_points.txt",
+            manifest_path,
+            installed + "config.default.json",
+            installed + "ui/index.html",
+            installed + "ui/app.js",
+            installed + "ui/styles.css",
+            c["package_config"]["package_root"] + "/__init__.py",
+            c["package_config"]["module"].replace(".", "/") + ".py",
+        }
+    else:
+        manifest_path = f"share/openhop/plugins/{c['plugin']}/openhop-plugin.json"
+        required = {meta, record, "openhop-plugin.json", manifest_path, "ui/index.html"}
     allowed = required | {prefix + "WHEEL", prefix + "top_level.txt"}
     with zipfile.ZipFile(io.BytesIO(raw)) as archive:
         infos = archive.infolist()
@@ -350,7 +531,19 @@ def verify_wheel(raw, item):
                 "unsafe wheel member",
             )
             require(
-                name in allowed or name.startswith("ui/"), "unexpected wheel member"
+                name in allowed
+                or (
+                    bool(
+                        re.fullmatch(
+                            re.escape(c["package_config"]["package_root"])
+                            + r"/[A-Za-z_][A-Za-z0-9_]*\.py",
+                            name,
+                        )
+                    )
+                    if python_profile
+                    else name.startswith("ui/")
+                ),
+                "unexpected wheel member",
             )
         rows = csv.reader(io.StringIO(archive.read(record).decode("utf-8")))
         seen = set()
@@ -375,14 +568,16 @@ def verify_wheel(raw, item):
                     "RECORD mismatch",
                 )
         require(seen == set(names), "RECORD coverage incomplete")
-        manifest_raw = archive.read("openhop-plugin.json")
-        require(
-            manifest_raw == archive.read(manifest_path), "discovery manifest mismatch"
-        )
+        manifest_raw = archive.read(manifest_path)
+        if not python_profile:
+            require(
+                manifest_raw == archive.read("openhop-plugin.json"),
+                "discovery manifest mismatch",
+            )
         manifest = strict_json(manifest_raw)
         require(
             manifest.get("schema") == 1
-            and manifest.get("id") == CERTIFICATION["plugin"]
+            and manifest.get("id") == c["plugin"]
             and manifest.get("version") == version,
             "manifest identity mismatch",
         )
@@ -391,18 +586,45 @@ def verify_wheel(raw, item):
             and manifest["ui"].get("entry") == "ui/index.html",
             "manifest entrypoint mismatch",
         )
+        if python_profile:
+            import configparser
+
+            require(
+                manifest.get("runtime")
+                == {
+                    "type": "python",
+                    "entrypoint": c["package_config"]["console_script"],
+                },
+                "runtime entrypoint mismatch",
+            )
+            entrypoints = configparser.ConfigParser(interpolation=None)
+            entrypoints.optionxform = str
+            entrypoints.read_string(
+                archive.read(prefix + "entry_points.txt").decode("utf-8")
+            )
+            require(
+                not entrypoints.defaults()
+                and entrypoints.sections() == ["console_scripts"]
+                and dict(entrypoints["console_scripts"])
+                == {
+                    c["package_config"]["console_script"]: c["package_config"]["module"]
+                    + ":"
+                    + c["package_config"]["callable"]
+                },
+                "console entrypoint mismatch",
+            )
         metadata = BytesParser(policy=default).parsebytes(archive.read(meta))
         require(
-            metadata.get_all("Name") == [CERTIFICATION["distribution"]]
+            metadata.get_all("Name") == [c["distribution"]]
             and metadata.get_all("Version") == [version],
             "distribution metadata mismatch",
         )
 
 
-def resolve_tag(api, repository, tag):
+def resolve_tag(api, repository, tag, plugin="waev.outpost"):
+    c = registration(plugin)
     require(
-        repository
-        in {CERTIFICATION["artifact_repository"], CERTIFICATION["source_repository"]},
+        repository in {c["artifact_repository"], c["source_repository"]},
         "unapproved repository",
     )
     require(re.fullmatch(r"v" + VERSION.pattern, tag), "invalid tag")
@@ -418,8 +640,11 @@ def resolve_tag(api, repository, tag):
 
 def verify_release(api, item):
     version = item["version"]
-    require(item["wheel_url"] == wheel_url(version), "release URL mismatch")
-    repo = CERTIFICATION["artifact_repository"]
+    c = item_registration(item)
+    require(
+        item["wheel_url"] == wheel_url(version, c["plugin"]), "release URL mismatch"
+    )
+    repo = c["artifact_repository"]
     release = api.call(f"/repos/{repo}/releases/tags/v{version}")
     require(
         release["tag_name"] == "v" + version
@@ -428,15 +653,30 @@ def verify_release(api, item):
         "release not final",
     )
     assets = release["assets"]
-    require(len(assets) == 1, "release must contain exactly one wheel")
-    asset = assets[0]
+    wheel_name = item["wheel_url"].rsplit("/", 1)[1]
+    expected = {wheel_name}
+    if c["release_assets"] == "wheel-and-zip":
+        expected.add(f"{c['distribution']}-v{version}-wheel.zip")
+    require(
+        len(assets) == len(expected) and {a["name"] for a in assets} == expected,
+        "release asset contract mismatch",
+    )
+    for a in assets:
+        require(
+            a["browser_download_url"]
+            == item["wheel_url"].rsplit("/", 1)[0] + "/" + a["name"]
+            and type(a["size"]) is int
+            and 0 < a["size"] <= MAX_WHEEL,
+            "release asset mismatch",
+        )
+    asset = next(a for a in assets if a["name"] == wheel_name)
     require(
         asset["name"] == item["wheel_url"].rsplit("/", 1)[1]
         and asset["browser_download_url"] == item["wheel_url"]
         and 0 < asset["size"] <= MAX_WHEEL,
         "release asset mismatch",
     )
-    artifact_sha = resolve_tag(api, repo, "v" + version)
+    artifact_sha = resolve_tag(api, repo, "v" + version, c["plugin"])
     # The certified publisher asserts this private source revision. Catalogue-only
     # credentials cannot independently verify pymc_console; public artifact checks
     # below do not claim source-to-build provenance.
@@ -445,10 +685,19 @@ def verify_release(api, item):
         isinstance(source_sha, str) and SHA.fullmatch(source_sha),
         "invalid source revision",
     )
+    if c["source_verification"] == "public-tag":
+        require(source_sha == artifact_sha, "source revision does not match public tag")
     return {
         "artifact_sha": artifact_sha,
         "source_sha": source_sha,
         "asset_size": asset["size"],
+        "assets": sorted(
+            (
+                {k: a[k] for k in ("name", "size", "browser_download_url")}
+                for a in assets
+            ),
+            key=lambda a: a["name"],
+        ),
     }
 
 
@@ -523,8 +772,8 @@ def current_approval(api, pr):
 
 def validate_data(candidate, files):
     # Always use main's schema and validator, never scripts or schema from the PR.
-    import tempfile
     import importlib.util
+    import tempfile
 
     spec = importlib.util.spec_from_file_location(
         "trusted_catalogue_validator", ROOT / "scripts/validate_catalogue.py"
@@ -582,6 +831,7 @@ def evaluate(api, number, receipt=None):
         "validation_run": validation,
         "allowed": True,
         "certified": item is not None,
+        "plugin": item["id"] if item else None,
     }
     if item:
         if receipt is None:
