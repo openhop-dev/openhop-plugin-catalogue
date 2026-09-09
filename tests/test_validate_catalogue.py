@@ -24,7 +24,7 @@ def test_repository_catalogue_metadata_validates():
 
     assert result["schema"] == 2
     plugins = {item["id"]: item for item in result["plugins"]}
-    assert plugins["openhop.nomad"]["version"] == "0.1.1"
+    assert plugins["openhop.nomad"]["version"] == "0.1.2"
     assert plugins["openhop.nomad"]["category"] == "integration"
     assert plugins["openhop.nomad"]["logo"] == (
         "https://cdn.jsdelivr.net/gh/selfhst/icons/png/project-nomad.png"
@@ -77,7 +77,7 @@ def test_wheel_url_repository_must_match_catalogue_repository(tmp_path: Path):
 def test_wheel_filename_version_must_match_approved_version(tmp_path: Path):
     data = _copy_catalogue(tmp_path)
     data["plugins"][0]["wheel_url"] = data["plugins"][0]["wheel_url"].replace(
-        "openhop_nomad_plugin-0.1.1", "openhop_nomad_plugin-9.9.9"
+        "openhop_nomad_plugin-0.1.2", "openhop_nomad_plugin-9.9.9"
     )
     (tmp_path / "catalogue.json").write_text(json.dumps(data), encoding="utf-8")
 
