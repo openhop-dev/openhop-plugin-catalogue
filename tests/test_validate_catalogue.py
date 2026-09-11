@@ -24,7 +24,7 @@ def test_repository_catalogue_metadata_validates():
 
     assert result["schema"] == 2
     plugins = {item["id"]: item for item in result["plugins"]}
-    assert plugins["openhop.nomad"]["version"] == "0.1.1"
+    assert {"openhop.nomad", "waev.outpost"} <= plugins.keys()
     assert plugins["openhop.nomad"]["category"] == "integration"
     assert plugins["openhop.nomad"]["logo"] == (
         "https://cdn.jsdelivr.net/gh/selfhst/icons/png/project-nomad.png"
@@ -76,9 +76,12 @@ def test_wheel_url_repository_must_match_catalogue_repository(tmp_path: Path):
 
 def test_wheel_filename_version_must_match_approved_version(tmp_path: Path):
     data = _copy_catalogue(tmp_path)
-    data["plugins"][0]["wheel_url"] = data["plugins"][0]["wheel_url"].replace(
-        "openhop_nomad_plugin-0.1.1", "openhop_nomad_plugin-9.9.9"
-    )
+    item = next(item for item in data["plugins"] if item["id"] == "openhop.nomad")
+    directory, filename = item["wheel_url"].rsplit("/", 1)
+    parts = filename.split("-")
+    # Change only the wheel's version, including when 9.9.9 is already approved.
+    parts[1] = "9.9.9" if item["version"] != "9.9.9" else "9.9.8"
+    item["wheel_url"] = directory + "/" + "-".join(parts)
     (tmp_path / "catalogue.json").write_text(json.dumps(data), encoding="utf-8")
 
     with pytest.raises(CatalogueValidationError, match="filename version"):
