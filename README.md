@@ -89,6 +89,10 @@ versions, URLs, or checksums.
 
 ## Approval process
 
+Third-party developers: start with [Adding a third-party app](docs/third-party-apps.md).
+Testing a wheel on your own openHop installation does not require a catalogue PR;
+catalogue inclusion requires a PR and openHop team review of the app.
+
 1. Build and publish the wheel through the plugin's artifact pipeline.
 2. Record the reviewed source commit and calculate the published wheel's SHA-256.
 3. Update `catalogue.json` with the approved version, GitHub Release URL, and digest.
