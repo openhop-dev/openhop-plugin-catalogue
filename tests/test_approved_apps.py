@@ -12,6 +12,14 @@ from test_publishing_policy import ROOT, fixtures, p
 
 def nomad():
     base, _, pr = fixtures()
+    # Keep the synthetic upgrade independent of the currently approved release.
+    # The wheel and release fixtures below describe the fixed 0.1.2 candidate.
+    base["plugins"][0].update(
+        version="0.1.1",
+        source_revision="e" * 40,
+        sha256="a" * 64,
+        wheel_url="https://github.com/openhop-dev/openhop-nomad-plugin/releases/download/v0.1.1/openhop_nomad_plugin-0.1.1-py3-none-any.whl",
+    )
     candidate = copy.deepcopy(base)
     item = candidate["plugins"][0]
     item.update(
