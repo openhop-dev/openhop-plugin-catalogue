@@ -6,6 +6,10 @@ The openHop plugin catalogue is a curated directory of reviewed plugin releases.
 
 ## Test your app first — no catalogue PR required
 
+Start with [Build a Repeater plugin wheel](plugin-wheel-development.md) for the
+source-grounded manifest/runtime contract, a minimal Python packaging example,
+and a parser check that needs no running Repeater or hardware.
+
 You do not need a catalogue listing, an approval, or a PR to develop and test your app:
 
 1. Package your app as an openHop-compatible Python wheel (`.whl`), including its plugin manifest and required runtime/UI files.

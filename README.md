@@ -89,7 +89,8 @@ versions, URLs, or checksums.
 
 ## Approval process
 
-Third-party developers: start with [Adding a third-party app](docs/third-party-apps.md).
+Third-party developers: [build a compatible plugin wheel](docs/plugin-wheel-development.md),
+then follow [Adding a third-party app](docs/third-party-apps.md).
 Testing a wheel on your own openHop installation does not require a catalogue PR;
 catalogue inclusion requires a PR and openHop team review of the app.
 
