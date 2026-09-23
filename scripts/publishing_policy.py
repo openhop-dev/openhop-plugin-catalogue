@@ -530,7 +530,8 @@ def verify_wheel(raw, item):
                 c["package_config"]["package_root"] + "/collectors/" + filename
                 for filename in ("__init__.py", "base.py", "plugin.py", "repeater.py")
             )
-            required.add(prefix + "licenses/LICENSE")    else:
+            required.add(prefix + "licenses/LICENSE")
+    else:
         manifest_path = f"share/openhop/plugins/{c['plugin']}/openhop-plugin.json"
         required = {meta, record, "openhop-plugin.json", manifest_path, "ui/index.html"}
         registered_assets = set()
