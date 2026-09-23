@@ -84,8 +84,7 @@ def load_registry(path=REGISTRY_PATH):
         result = {}
         for c in data["apps"]:
             require(
-                isinstance(c, dict) and keys <= set(c) <= keys | {"proposal_repository"},
-                "invalid registration fields"
+                isinstance(c, dict) and set(c) == keys, "invalid registration fields"
             )
             require(
                 all(
@@ -96,12 +95,6 @@ def load_registry(path=REGISTRY_PATH):
                 ),
                 "invalid registration types",
             )
-            if "proposal_repository" in c:
-                require(
-                    isinstance(c["proposal_repository"], str)
-                    and re.fullmatch(r"[A-Za-z0-9_-]+/[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*", c["proposal_repository"]),
-                    "invalid proposal repository",
-                )
             require(
                 re.fullmatch(r"[a-z][a-z0-9]*(?:[.-][a-z0-9]+)+", c["plugin"]),
                 "invalid plugin ID",
@@ -252,7 +245,7 @@ def _certified_entry(pr, files, base, candidate, c):
                 "type": "Bot",
             }
         )
-        require(pr["head"]["repo"]["full_name"] == c.get("proposal_repository", REPOSITORY))
+        require(pr["head"]["repo"]["full_name"] == REPOSITORY)
         require(
             pr["base"]["repo"]["full_name"] == REPOSITORY
             and pr["base"]["ref"] == "main"
