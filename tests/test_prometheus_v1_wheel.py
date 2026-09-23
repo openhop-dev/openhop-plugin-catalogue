@@ -1,6 +1,7 @@
 """Exercise the trusted Prometheus profile with a portable wheel fixture."""
 
 import base64
+import copy
 import csv
 import hashlib
 import io
@@ -20,6 +21,34 @@ DATA = (
 )
 RECORD = "openhop_prometheus_plugin-1.0.0.dist-info/RECORD"
 ASSETS = ("prometheus-logo.svg", "PROMETHEUS-LICENSE", "PROVENANCE.md")
+
+
+def test_fork_publisher_certification_requires_exact_head_and_bot():
+    registration = p.registration("openhop.prometheus")
+    assert registration["proposal_repository"] == "yellowcooln/openhop-plugin-catalogue"
+    base = json.loads((Path(__file__).resolve().parents[1] / "catalogue.json").read_text())
+    old = {"id": "openhop.prometheus", "repository": registration["artifact_repository"],
+           "distribution": registration["distribution"], "version": "1.0.0",
+           "source_revision": "a" * 40, "sha256": "b" * 64,
+           "wheel_url": p.wheel_url("1.0.0", "openhop.prometheus")}
+    base["plugins"].append(old)
+    candidate = copy.deepcopy(base)
+    candidate["plugins"][-1].update(version="1.0.1", source_revision="c" * 40,
+                                     sha256="d" * 64,
+                                     wheel_url=p.wheel_url("1.0.1", "openhop.prometheus"))
+    pr = {"user": {"id": registration["publisher_user_id"],
+                    "login": registration["publisher_login"], "type": "Bot"},
+          "head": {"ref": registration["branch_prefix"] + "1.0.1",
+                   "repo": {"full_name": registration["proposal_repository"]}},
+          "base": {"ref": "main", "repo": {"full_name": p.REPOSITORY}}}
+    assert p.certified_entry(pr, ["catalogue.json"], base, candidate) == candidate["plugins"][-1]
+    for wrong in (p.REPOSITORY, "attacker/openhop-plugin-catalogue"):
+        forged = copy.deepcopy(pr)
+        forged["head"]["repo"]["full_name"] = wrong
+        assert p.certified_entry(forged, ["catalogue.json"], base, candidate) is None
+    forged = copy.deepcopy(pr)
+    forged["user"]["id"] = 1
+    assert p.certified_entry(forged, ["catalogue.json"], base, candidate) is None
 
 
 @pytest.fixture(scope="module")

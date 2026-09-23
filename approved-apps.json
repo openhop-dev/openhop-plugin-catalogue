@@ -44,6 +44,7 @@
     {
       "plugin": "openhop.prometheus",
       "artifact_repository": "openhop-dev/openhop-prometheus-plugin",
+      "proposal_repository": "yellowcooln/openhop-plugin-catalogue",
       "source_repository": "openhop-dev/openhop-prometheus-plugin",
       "distribution": "openhop-prometheus-plugin",
       "wheel_basename": "openhop_prometheus_plugin",
