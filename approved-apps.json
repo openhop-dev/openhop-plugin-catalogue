@@ -40,6 +40,26 @@
       },
       "source_verification": "public-tag",
       "release_assets": "wheel-and-zip"
+    },
+    {
+      "plugin": "openhop.prometheus",
+      "artifact_repository": "openhop-dev/openhop-prometheus-plugin",
+      "source_repository": "openhop-dev/openhop-prometheus-plugin",
+      "distribution": "openhop-prometheus-plugin",
+      "wheel_basename": "openhop_prometheus_plugin",
+      "publisher_app_id": 4844131,
+      "publisher_login": "openhop-catalogue-publisher[bot]",
+      "publisher_user_id": 325431437,
+      "branch_prefix": "automation/openhop-prometheus-v",
+      "package_profile": "python-service-v1",
+      "package_config": {
+        "package_root": "openhop_prometheus_plugin",
+        "module": "openhop_prometheus_plugin.main",
+        "console_script": "openhop-prometheus",
+        "callable": "main"
+      },
+      "source_verification": "public-tag",
+      "release_assets": "wheel-only"
     }
   ]
 }
