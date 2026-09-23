@@ -64,7 +64,7 @@ def test_optional_real_build_from_environment():
 def item(raw):
     registration = p.registration("openhop.prometheus")
     assert registration["package_profile"] == "python-service-v1"
-    assert registration["release_assets"] == "wheel-only"
+    assert registration["release_assets"] == "wheel-and-zip"
     assert registration["source_verification"] == "public-tag"
     return {
         "id": registration["plugin"],
