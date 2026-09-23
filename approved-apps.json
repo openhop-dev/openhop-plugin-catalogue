@@ -59,7 +59,7 @@
         "callable": "main"
       },
       "source_verification": "public-tag",
-      "release_assets": "wheel-only"
+      "release_assets": "wheel-and-zip"
     }
   ]
 }
