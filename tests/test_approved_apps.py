@@ -57,6 +57,9 @@ def nomad_wheel(mutation=None):
                 prefix + "ui/index.html": b"test",
                 prefix + "ui/app.js": b"test",
                 prefix + "ui/styles.css": b"test",
+                prefix + "ui/assets/NOMAD-LICENSE.txt": b"license",
+                prefix + "ui/assets/NOTICE.md": b"notice",
+                prefix + "ui/assets/project_nomad_logo.webp": b"image",
                 "meshcore_nomad_bridge/__init__.py": b"",
                 "meshcore_nomad_bridge/main.py": b'raise RuntimeError("never execute")',
                 "openhop_nomad_plugin-0.1.2.dist-info/METADATA": b"Name: openhop-nomad-plugin\nVersion: 0.1.2\n",
@@ -99,6 +102,11 @@ def generic_registry(tmp_path):
                     "module": "meshcore_nomad_bridge.main",
                     "console_script": "meshcore-nomad-bridge",
                     "callable": "main",
+                    "ui_assets": [
+                        "ui/assets/NOMAD-LICENSE.txt",
+                        "ui/assets/NOTICE.md",
+                        "ui/assets/project_nomad_logo.webp",
+                    ],
                 },
             )
     third = copy.deepcopy(data["apps"][1])
@@ -114,6 +122,11 @@ def generic_registry(tmp_path):
             "module": "different_package.worker",
             "console_script": "different-service",
             "callable": "run",
+            "ui_assets": [
+                "ui/assets/NOMAD-LICENSE.txt",
+                "ui/assets/NOTICE.md",
+                "ui/assets/project_nomad_logo.webp",
+            ],
         },
     )
     data["apps"].append(third)
@@ -257,6 +270,36 @@ def test_nomad_untrusted_changes_not_certified(attack):
     if attack == "profile":
         c["plugins"][0]["package_profile"] = "outpost-ui-v1"
     assert p.certified_entry(pr, ["catalogue.json"], b, c) is None
+
+
+def test_registered_ui_assets_allow_newer_wheels_without_breaking_old_versions():
+    item = nomad()[1]["plugins"][0]
+    def missing(files):
+        del files[next(n for n in files if n.endswith("ui/assets/NOTICE.md"))]
+    raw = nomad_wheel(missing)
+    item["sha256"] = hashlib.sha256(raw).hexdigest()
+    p.verify_wheel(raw, item)  # optional asset: old approved wheels lack it
+
+    def extra(files):
+        files[next(n for n in files if n.endswith("ui/assets/NOTICE.md"))
+              .removesuffix("NOTICE.md") + "unlisted.html"] = b"<script>evil</script>"
+    raw = nomad_wheel(extra)
+    item["sha256"] = hashlib.sha256(raw).hexdigest()
+    with pytest.raises(p.PolicyError, match="unexpected wheel member"):
+        p.verify_wheel(raw, item)
+
+
+@pytest.mark.parametrize("assets", [
+    ["ui/assets/../evil.webp"], ["ui/assets/evil.js"], ["ui/evil.webp"],
+    ["ui/assets/foo.webp", "ui/assets/foo.webp"], "ui/assets/foo.webp", [123],
+])
+def test_registered_ui_assets_reject_unsafe_paths(tmp_path, assets):
+    path = generic_registry(tmp_path)
+    data = json.loads(path.read_text())
+    data["apps"][-1]["package_config"]["ui_assets"] = assets
+    path.write_text(json.dumps(data))
+    with pytest.raises(p.PolicyError):
+        p.load_registry(path)
 
 
 def test_nomad_data_files_profile():

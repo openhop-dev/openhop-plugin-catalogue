@@ -31,7 +31,12 @@
         "package_root": "meshcore_nomad_bridge",
         "module": "meshcore_nomad_bridge.main",
         "console_script": "meshcore-nomad-bridge",
-        "callable": "main"
+        "callable": "main",
+        "ui_assets": [
+          "ui/assets/NOMAD-LICENSE.txt",
+          "ui/assets/NOTICE.md",
+          "ui/assets/project_nomad_logo.webp"
+        ]
       },
       "source_verification": "public-tag",
       "release_assets": "wheel-and-zip"

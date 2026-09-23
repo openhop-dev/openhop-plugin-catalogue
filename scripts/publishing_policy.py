@@ -143,10 +143,22 @@ def load_registry(path=REGISTRY_PATH):
                 import keyword
 
                 require(
-                    set(config)
-                    == {"package_root", "module", "console_script", "callable"}
-                    and all(isinstance(v, str) for v in config.values()),
+                    set(config) in (
+                        {"package_root", "module", "console_script", "callable"},
+                        {"package_root", "module", "console_script", "callable", "ui_assets"},
+                    )
+                    and all(isinstance(config[k], str) for k in
+                            ("package_root", "module", "console_script", "callable")),
                     "invalid Python package configuration",
+                )
+                assets = config.get("ui_assets", [])
+                require(
+                    isinstance(assets, list) and len(assets) <= 16
+                    and len(assets) == len(set(x for x in assets if isinstance(x, str)))
+                    and all(isinstance(x, str) and re.fullmatch(
+                        r"ui/assets/[A-Za-z0-9][A-Za-z0-9._-]{0,100}\.(?:webp|png|svg|txt|md)", x
+                    ) for x in assets),
+                    "invalid registered UI assets",
                 )
                 for identifier in (config["package_root"], config["callable"]):
                     require(
@@ -502,10 +514,14 @@ def verify_wheel(raw, item):
             c["package_config"]["package_root"] + "/__init__.py",
             c["package_config"]["module"].replace(".", "/") + ".py",
         }
+        registered_assets = {installed + path for path in c["package_config"].get("ui_assets", [])}
     else:
         manifest_path = f"share/openhop/plugins/{c['plugin']}/openhop-plugin.json"
         required = {meta, record, "openhop-plugin.json", manifest_path, "ui/index.html"}
-    allowed = required | {prefix + "WHEEL", prefix + "top_level.txt"}
+        registered_assets = set()
+    # Optional, explicitly registered UI assets are allowed for newer releases;
+    # older approved versions need not contain them.
+    allowed = required | registered_assets | {prefix + "WHEEL", prefix + "top_level.txt"}
     with zipfile.ZipFile(io.BytesIO(raw)) as archive:
         infos = archive.infolist()
         names = [x.filename for x in infos]
