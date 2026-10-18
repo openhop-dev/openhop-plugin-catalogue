@@ -60,6 +60,25 @@
       "sha256": "61463db2a5b11f8b3baa04cda11ab34d60fde90dc9c6e8e590ff64bb649505be",
       "source_revision": "b8780fa9fac31e8a6d773f7858442bfdf59db7d5",
       "wheel_url": "https://github.com/openhop-dev/openhop-prometheus-plugin/releases/download/v1.0.0/openhop_prometheus_plugin-1.0.0-py3-none-any.whl"
+    },
+    {
+      "id": "stormhop",
+      "name": "Stormhop",
+      "description": "Relays National Weather Service alerts to a mesh channel and answers wx requests from other nodes.",
+      "repository": "jram0421/openhop-stormhop",
+      "distribution": "openhop-stormhop",
+      "category": "integration",
+      "logo": "https://raw.githubusercontent.com/jram0421/openhop-stormhop/e3aa500f3299d495625b3b962fd2a9876209cde5/assets/logo.png",
+      "min_repeater_version": "0.3.0",
+      "homepage": "https://github.com/jram0421/openhop-stormhop",
+      "tags": [
+        "weather",
+        "alerts"
+      ],
+      "version": "0.2.0",
+      "sha256": "52ed482d85f484b7585643c5901d5ef9ec588c6440f644009e13ea37dcab61ed",
+      "source_revision": "e3aa500f3299d495625b3b962fd2a9876209cde5",
+      "wheel_url": "https://github.com/jram0421/openhop-stormhop/releases/download/v0.2.0/openhop_stormhop-0.2.0-py3-none-any.whl"
     }
   ]
 }
