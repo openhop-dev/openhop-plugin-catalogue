@@ -60,6 +60,26 @@
       "sha256": "61463db2a5b11f8b3baa04cda11ab34d60fde90dc9c6e8e590ff64bb649505be",
       "source_revision": "b8780fa9fac31e8a6d773f7858442bfdf59db7d5",
       "wheel_url": "https://github.com/openhop-dev/openhop-prometheus-plugin/releases/download/v1.0.0/openhop_prometheus_plugin-1.0.0-py3-none-any.whl"
+    },
+    {
+      "id": "porchlight",
+      "name": "Porchlight",
+      "description": "Shows every channel the repeater hears, and answers newcomers in #porchlight with the channels active nearby.",
+      "repository": "mutiny19/porchlight-openhop-plugin",
+      "category": "integration",
+      "logo": "https://raw.githubusercontent.com/mutiny19/porchlight-openhop-plugin/7141a0f0eae2200b6fa445041392f72462027c23/plugin/ui/logo.svg",
+      "distribution": "porchlight-openhop-plugin",
+      "source_revision": "7141a0f0eae2200b6fa445041392f72462027c23",
+      "version": "0.10.1",
+      "wheel_url": "https://github.com/mutiny19/porchlight-openhop-plugin/releases/download/v0.10.1/porchlight_openhop_plugin-0.10.1-py3-none-any.whl",
+      "sha256": "e25372ed20bfc1aff5e4b7fa46d5857420763c9d367493da550fdd658e8a71fb",
+      "min_repeater_version": "1.1.4",
+      "homepage": "https://github.com/mutiny19/porchlight-openhop-plugin",
+      "tags": [
+        "meshcore",
+        "channels",
+        "community"
+      ]
     }
   ]
 }
