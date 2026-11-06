@@ -60,6 +60,26 @@
       "sha256": "61463db2a5b11f8b3baa04cda11ab34d60fde90dc9c6e8e590ff64bb649505be",
       "source_revision": "b8780fa9fac31e8a6d773f7858442bfdf59db7d5",
       "wheel_url": "https://github.com/openhop-dev/openhop-prometheus-plugin/releases/download/v1.0.0/openhop_prometheus_plugin-1.0.0-py3-none-any.whl"
+    },
+    {
+      "id": "waev.companion",
+      "name": "Waev",
+      "description": "The Waev web companion: companion chat and settings in the browser, served by the shared Waev engine on this node, and push for the Waev apps (off by default).",
+      "repository": "Treehouse-00/waev-companion",
+      "category": "webui",
+      "logo": "https://raw.githubusercontent.com/Treehouse-00/waev-companion/8097a31ec3d85ff543fc899caca2618e654d164f/docs/images/waev-companion-card.jpg",
+      "distribution": "waev-companion",
+      "source_revision": "43f609fabc9c08a34846dc9cde42cd2b44624440",
+      "version": "1.0.12920",
+      "wheel_url": "https://github.com/Treehouse-00/waev-companion/releases/download/v1.0.12920/waev_companion-1.0.12920-py3-none-any.whl",
+      "sha256": "6859f1e6660a9d6bd605ee58760fc29b518b861ec1a0d70c8cebff4ba2c39dd8",
+      "min_repeater_version": "1.1.2",
+      "homepage": "https://github.com/Treehouse-00/waev-companion",
+      "tags": [
+        "webui",
+        "chat",
+        "companion"
+      ]
     }
   ]
 }
