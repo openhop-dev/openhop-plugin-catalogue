@@ -67,7 +67,7 @@
       "description": "The Waev web companion: companion chat and settings in the browser, served by the shared Waev engine on this node, and push for the Waev apps (off by default).",
       "repository": "Treehouse-00/waev-companion",
       "category": "webui",
-      "logo": "https://raw.githubusercontent.com/Treehouse-00/waev-companion/84a68256ac90901bf375891329a4fccad0dc975c/docs/images/waev-companion-card.jpg",
+      "logo": "https://raw.githubusercontent.com/Treehouse-00/waev-companion/8097a31ec3d85ff543fc899caca2618e654d164f/docs/images/waev-companion-card.jpg",
       "distribution": "waev-companion",
       "source_revision": "43f609fabc9c08a34846dc9cde42cd2b44624440",
       "version": "1.0.12920",
