@@ -60,6 +60,26 @@
       "sha256": "61463db2a5b11f8b3baa04cda11ab34d60fde90dc9c6e8e590ff64bb649505be",
       "source_revision": "b8780fa9fac31e8a6d773f7858442bfdf59db7d5",
       "wheel_url": "https://github.com/openhop-dev/openhop-prometheus-plugin/releases/download/v1.0.0/openhop_prometheus_plugin-1.0.0-py3-none-any.whl"
+    },
+    {
+      "id": "rickelobe.influxdb",
+      "name": "InfluxDB Exporter",
+      "description": "Pushes Repeater metrics, per-packet events, logs and node/GPS snapshots to InfluxDB (v1, v2 or v3) for Grafana dashboards.",
+      "repository": "rkoberholtz/openhop-influxdb-plugin",
+      "distribution": "openhop-influxdb-plugin",
+      "category": "integration",
+      "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons/png/influxdb.png",
+      "min_repeater_version": "1.1.4",
+      "homepage": "https://github.com/rkoberholtz/openhop-influxdb-plugin",
+      "tags": [
+        "influxdb",
+        "grafana",
+        "metrics"
+      ],
+      "version": "0.2.1",
+      "source_revision": "5bad63525fb5365cf16b263faec67b35c2d0827e",
+      "wheel_url": "https://github.com/rkoberholtz/openhop-influxdb-plugin/releases/download/v0.2.1/openhop_influxdb_plugin-0.2.1-py3-none-any.whl",
+      "sha256": "ee490187a69648fa4f75ab18cdd6f55140456e1cc2642d8e592caf5992acd0e6"
     }
   ]
 }
