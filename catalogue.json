@@ -29,10 +29,10 @@
       "category": "webui",
       "logo": "https://bucket.openhop.dev/repository-open-graph-template-outpost.jpg",
       "distribution": "waev-outpost-plugin",
-      "source_revision": "349623387468ccb5cc54529828c1d2e69ed9a45c",
-      "version": "0.9.412",
-      "wheel_url": "https://github.com/Treehouse-00/waev-outpost-plugin/releases/download/v0.9.412/waev_outpost_plugin-0.9.412-py3-none-any.whl",
-      "sha256": "44c160f0a211430a22d4704d823b49666224508e0971a96218f4cecde1c9b13c",
+      "source_revision": "f0b95ccc7c6dcce0868182f8833e8a222202abd8",
+      "version": "0.9.416",
+      "wheel_url": "https://github.com/Treehouse-00/waev-outpost-plugin/releases/download/v0.9.416/waev_outpost_plugin-0.9.416-py3-none-any.whl",
+      "sha256": "1d27a4c9372f5104626fafcd84d5d212a6ca88978630e5ca5a54ca88d0faeaef",
       "min_repeater_version": "0.3.0",
       "homepage": "https://github.com/Treehouse-00/waev-outpost-plugin",
       "tags": [
@@ -60,6 +60,26 @@
       "sha256": "61463db2a5b11f8b3baa04cda11ab34d60fde90dc9c6e8e590ff64bb649505be",
       "source_revision": "b8780fa9fac31e8a6d773f7858442bfdf59db7d5",
       "wheel_url": "https://github.com/openhop-dev/openhop-prometheus-plugin/releases/download/v1.0.0/openhop_prometheus_plugin-1.0.0-py3-none-any.whl"
+    },
+    {
+      "id": "waev.companion",
+      "name": "Waev",
+      "description": "The Waev web companion: companion chat and settings in the browser, served by the shared Waev engine on this node, and push for the Waev apps (off by default).",
+      "repository": "Treehouse-00/waev-companion",
+      "category": "webui",
+      "logo": "https://raw.githubusercontent.com/Treehouse-00/waev-companion/8097a31ec3d85ff543fc899caca2618e654d164f/docs/images/waev-companion-card.jpg",
+      "distribution": "waev-companion",
+      "source_revision": "7d6a6b961f6a24010e5c62d55d067cad0dab714b",
+      "version": "1.0.13043",
+      "wheel_url": "https://github.com/Treehouse-00/waev-companion/releases/download/v1.0.13043/waev_companion-1.0.13043-py3-none-any.whl",
+      "sha256": "bfc0ec11d8541b73325a357244cb39c7e563330bb458f8d7a57ce3b00c943b7c",
+      "min_repeater_version": "1.1.2",
+      "homepage": "https://github.com/Treehouse-00/waev-companion",
+      "tags": [
+        "webui",
+        "chat",
+        "companion"
+      ]
     },
     {
       "id": "porchlight",
