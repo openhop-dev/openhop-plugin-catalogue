@@ -80,6 +80,26 @@
         "chat",
         "companion"
       ]
+    },
+    {
+      "id": "porchlight",
+      "name": "Porchlight",
+      "description": "Shows every channel the repeater hears, and answers newcomers in #porchlight with the channels active nearby.",
+      "repository": "mutiny19/porchlight-openhop-plugin",
+      "category": "integration",
+      "logo": "https://raw.githubusercontent.com/mutiny19/porchlight-openhop-plugin/7c4cf88d090cc953d0f7ef101ba3c765ef86a5b4/plugin/ui/logo.svg",
+      "distribution": "porchlight-openhop-plugin",
+      "source_revision": "7c4cf88d090cc953d0f7ef101ba3c765ef86a5b4",
+      "version": "0.10.2",
+      "wheel_url": "https://github.com/mutiny19/porchlight-openhop-plugin/releases/download/v0.10.2/porchlight_openhop_plugin-0.10.2-py3-none-any.whl",
+      "sha256": "6b1f32dc272780f07627fc4615379141cac071928afbe5f624c2dfac7b2f0f13",
+      "min_repeater_version": "1.1.4",
+      "homepage": "https://github.com/mutiny19/porchlight-openhop-plugin",
+      "tags": [
+        "meshcore",
+        "channels",
+        "community"
+      ]
     }
   ]
 }
