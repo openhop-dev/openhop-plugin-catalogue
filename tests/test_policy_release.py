@@ -16,6 +16,7 @@ def wheel(mutation=None):
             "schema": 1,
             "version": "1.2.3",
             "ui": {"type": "application", "entry": "ui/index.html"},
+            "runtime": {"type": "python", "entrypoint": "waev-outpost-recorder"},
         }
     ).encode()
     dist = "waev_outpost_plugin-1.2.3.dist-info/"
@@ -23,8 +24,14 @@ def wheel(mutation=None):
         "openhop-plugin.json": manifest,
         "share/openhop/plugins/waev.outpost/openhop-plugin.json": manifest,
         "ui/index.html": b"<html>test</html>",
+        "ui/assets/app.js": b"test",
+        "waev_outpost_recorder/__init__.py": b"",
+        "waev_outpost_recorder/__main__.py": b'raise RuntimeError("never execute")',
+        "waev_outpost_recorder/store.py": b'raise RuntimeError("never execute")',
         dist + "METADATA": b"Name: waev-outpost-plugin\nVersion: 1.2.3\n",
         dist + "WHEEL": b"Wheel-Version: 1.0\n",
+        dist + "entry_points.txt": b"[console_scripts]\n"
+        b"waev-outpost-recorder = waev_outpost_recorder.__main__:main\n",
     }
     if mutation:
         mutation(files)
@@ -69,6 +76,20 @@ def test_public_wheel_verified_without_execution():
         "record",
         "oversize",
         "duplicate",
+        "no-runtime",
+        "runtime-extra",
+        "entrypoint",
+        "second-script",
+        "second-section",
+        "no-entry-points",
+        "missing-module",
+        "missing-init",
+        "other-package",
+        "nested-package",
+        "package-data",
+        "data-layout",
+        "no-wheel-file",
+        "dependency",
     ],
 )
 def test_wheel_attacks_rejected(attack, monkeypatch):
@@ -76,6 +97,7 @@ def test_wheel_attacks_rejected(attack, monkeypatch):
 
     def mutate(files):
         meta = "waev_outpost_plugin-1.2.3.dist-info/METADATA"
+        entry_points = "waev_outpost_plugin-1.2.3.dist-info/entry_points.txt"
         if attack == "version":
             files[meta] = b"Name: waev-outpost-plugin\nVersion: 1.2.4\n"
         if attack == "distribution":
@@ -86,6 +108,50 @@ def test_wheel_attacks_rejected(attack, monkeypatch):
             files["ui/../evil"] = b"x"
         if attack == "python":
             files["setup.py"] = b'raise Exception("must not execute")'
+        if attack in {"no-runtime", "runtime-extra"}:
+            for name in (
+                "openhop-plugin.json",
+                "share/openhop/plugins/waev.outpost/openhop-plugin.json",
+            ):
+                m = json.loads(files[name])
+                if attack == "no-runtime":
+                    del m["runtime"]
+                else:
+                    m["runtime"]["args"] = ["--anything"]
+                files[name] = json.dumps(m).encode()
+        if attack == "entrypoint":
+            files[entry_points] = (
+                b"[console_scripts]\n"
+                b"waev-outpost-recorder = waev_outpost_recorder.store:main\n"
+            )
+        if attack == "second-script":
+            files[entry_points] += b"other = waev_outpost_recorder.__main__:main\n"
+        if attack == "second-section":
+            files[entry_points] += (
+                b"[gui_scripts]\nother = waev_outpost_recorder.__main__:main\n"
+            )
+        if attack == "no-entry-points":
+            del files[entry_points]
+        if attack == "missing-module":
+            del files["waev_outpost_recorder/__main__.py"]
+        if attack == "missing-init":
+            del files["waev_outpost_recorder/__init__.py"]
+        if attack == "other-package":
+            files["evil/__init__.py"] = b"evil"
+        if attack == "nested-package":
+            files["waev_outpost_recorder/vendor/__init__.py"] = b"evil"
+        if attack == "package-data":
+            files["waev_outpost_recorder/payload.so"] = b"evil"
+        if attack == "data-layout":
+            # The Python-service data prefix belongs to another profile.
+            files[
+                "waev_outpost_plugin-1.2.3.data/data/share/openhop/plugins/"
+                "waev.outpost/config.default.json"
+            ] = b"{}"
+        if attack == "no-wheel-file":
+            del files["waev_outpost_plugin-1.2.3.dist-info/WHEEL"]
+        if attack == "dependency":
+            files[meta] += b"Requires-Dist: anything\n"
 
     raw = wheel(mutate)
     if attack in {"record", "duplicate"}:

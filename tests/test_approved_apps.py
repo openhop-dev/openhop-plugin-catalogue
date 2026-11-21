@@ -223,6 +223,64 @@ def test_python_contract_validation(tmp_path, field, value):
         p.load_registry(path)
 
 
+def outpost(registry, monkeypatch):
+    monkeypatch.setattr(p, "load_registry", lambda: registry)
+    item = fixtures()[1]["plugins"][1]
+
+    def check(raw):
+        item["sha256"] = hashlib.sha256(raw).hexdigest()
+        p.verify_wheel(raw, item)
+
+    return check
+
+
+def test_static_ui_profile_rejects_the_service_layout(tmp_path, monkeypatch):
+    def ui_only(files):
+        for name in [n for n in files if n.startswith("waev_outpost_recorder/")]:
+            del files[name]
+        del files["waev_outpost_plugin-1.2.3.dist-info/entry_points.txt"]
+        for name in [n for n in files if n.endswith("openhop-plugin.json")]:
+            m = json.loads(files[name])
+            del m["runtime"]
+            files[name] = json.dumps(m).encode()
+
+    # generic_registry keeps Outpost on static-ui-v1, as it was registered before.
+    check = outpost(p.load_registry(generic_registry(tmp_path)), monkeypatch)
+    check(wheel(ui_only))
+    with pytest.raises(p.PolicyError):
+        check(wheel())
+
+
+@pytest.mark.parametrize(
+    "field,wrong",
+    [
+        ("package_root", "other"),
+        ("module", "waev_outpost_recorder.missing"),
+        ("console_script", "other-service"),
+        ("callable", "other"),
+    ],
+)
+def test_static_ui_service_contract_is_read_from_registry(monkeypatch, field, wrong):
+    registry = p.load_registry()
+    check = outpost(registry, monkeypatch)
+    check(wheel())
+    registry["waev.outpost"]["package_config"][field] = wrong
+    with pytest.raises(p.PolicyError):
+        check(wheel())
+
+
+def test_static_ui_service_profile_registers_no_ui_assets(tmp_path):
+    data = json.loads((ROOT / "approved-apps.json").read_text())
+    c = next(x for x in data["apps"] if x["plugin"] == "waev.outpost")
+    assert c["package_profile"] == "static-ui-service-v1"
+    # The static layout admits ui/** already.
+    c["package_config"]["ui_assets"] = ["ui/assets/logo.png"]
+    path = tmp_path / "registry.json"
+    path.write_text(json.dumps(data))
+    with pytest.raises(p.PolicyError):
+        p.load_registry(path)
+
+
 @pytest.mark.parametrize("attack", ["missing", "static-config", "legacy-profile"])
 def test_profile_contract_required(tmp_path, attack):
     path = generic_registry(tmp_path)

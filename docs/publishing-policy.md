@@ -36,8 +36,12 @@ Certified verification downloads the exact public versioned wheel without an
 Authorization header, restricts HTTPS redirects, caps bytes/time/expanded size,
 checks SHA-256, release asset identity/size, public tag resolution, wheel RECORD,
 distribution/version, profile-specific discovery manifests, and UI entry point.
-Outpost retains its root/installed duplicate manifests, UI-only allowlist and exactly
-one wheel release asset. NOMAD uses its existing versioned `.data/data/share/openhop/
+Outpost retains its root/installed duplicate manifests, `ui/` allowlist and exactly
+one wheel release asset, and adds `waev_outpost_recorder/*.py` and exact dist-info
+metadata. Its Python runtime must declare `waev-outpost-recorder`, whose sole
+console-script mapping is `waev_outpost_recorder.__main__:main`, and its metadata
+must declare no dependencies.
+NOMAD uses its existing versioned `.data/data/share/openhop/
 plugins/openhop.nomad/` installed manifest, default config and three UI assets, plus
 `meshcore_nomad_bridge/*.py` and exact dist-info metadata. It has no root manifest.
 Its Python runtime must declare `meshcore-nomad-bridge`, whose sole console-script
@@ -54,7 +58,12 @@ the approved digest pins the bytes clients must accept.
 catalogue credentials cannot independently query it. `source_revision` is a
 literal SHA asserted by the certified publisher, not independently proven
 source-to-build provenance. Public tag/digest/manifest verification does not prove
-that the wheel was built from that private source. No App permission expansion or
+that the wheel was built from that private source. Outpost's wheel carries a Python
+service, so certified Outpost releases merge Python that the Repeater runs as its
+plugin account, without human review, from a source this catalogue cannot read.
+The policy bounds that code's layout and pins its bytes; it does not review it. The
+shipped `.py` files are public in the wheel, but nothing compares them to source.
+No App permission expansion or
 producer-held approval key is used. Signed build attestations could strengthen this
 boundary later but are not part of this change.
 
@@ -62,6 +71,8 @@ boundary later but are not part of this change.
 
 Every registration requires `package_config`. `static-ui-v1` requires `{}` and
 retains the root/discovery duplicate manifest and UI-only payload contract.
+`static-ui-service-v1` is that same layout plus one registered Python package: it
+requires exactly the four fields below, without `ui_assets` (Outpost's registration).
 `python-service-v1` requires exactly these literal fields (NOMAD's registration):
 
 ```json
@@ -89,7 +100,19 @@ files there are `openhop-plugin.json`, `config.default.json`, `ui/index.html`,
 `ui/app.js`, and `ui/styles.css`. Runtime must name the registered command; the sole
 console-script mapping must be exactly `<console_script> = <module>:<callable>`.
 Checks bind metadata and module-file presence without importing code or claiming
-the callable was executed. Both profiles retain shared archive safety, size,
+the callable was executed.
+
+`static-ui-service-v1` keeps the static layout's root and discovery manifests and
+`ui/` payload, and applies the same package contract at the wheel root: it requires
+`<package_root>/__init__.py`, the configured module's `.py` file, `WHEEL` and
+`entry_points.txt`, allows only direct identifier-named `.py` files in that package,
+and binds the runtime and the sole console-script mapping the same way. Its metadata
+may declare no `Requires-Dist`, so the approved digest pins everything pip installs.
+The Python-service data prefix is not admitted under it. As under `static-ui-v1`,
+any file is admitted under `ui/`: the allowlist bounds the registered package's
+layout, not which files in the wheel could be imported.
+
+All profiles retain shared archive safety, size,
 SHA-256, exact metadata and complete RECORD verification. Release asset and source
 verification contracts remain separate registration fields.
 
@@ -107,8 +130,9 @@ and NOMAD. No legacy app-named profile aliases are accepted.
    publisher App/bot IDs and login, package profile and configuration, source verification and asset
    contract. Unknown fields, duplicate identities/repositories/branches and unknown
    profiles are rejected. Registry changes themselves require human approval.
-3. Reuse `static-ui-v1` for the UI-only layout or `python-service-v1` for the
-   Python-service layout above. Package/module/command names belong in registration,
+3. Reuse `static-ui-v1` for the UI-only layout, `static-ui-service-v1` for that
+   layout with a Python service, or `python-service-v1` for the Python-service
+   layout above. Package/module/command names belong in registration,
    not policy code; another app with that layout needs no validator or merge rewrite.
    A different layout requires a separately reviewed validator profile
    with failing-first allowlist/manifest/RECORD/entrypoint attack tests, not a broader

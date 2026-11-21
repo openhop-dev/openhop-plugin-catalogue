@@ -132,7 +132,8 @@ def load_registry(path=REGISTRY_PATH):
                 "invalid publisher login",
             )
             require(
-                c["package_profile"] in {"static-ui-v1", "python-service-v1"},
+                c["package_profile"]
+                in {"static-ui-v1", "static-ui-service-v1", "python-service-v1"},
                 "unknown package profile",
             )
             config = c["package_config"]
@@ -150,6 +151,13 @@ def load_registry(path=REGISTRY_PATH):
                     and all(isinstance(config[k], str) for k in
                             ("package_root", "module", "console_script", "callable")),
                     "invalid Python package configuration",
+                )
+                # The static layout already admits ui/**; only the Python-service
+                # layout registers individual UI assets.
+                require(
+                    c["package_profile"] == "python-service-v1"
+                    or "ui_assets" not in config,
+                    "static UI layout registers no UI assets",
                 )
                 assets = config.get("ui_assets", [])
                 require(
@@ -498,6 +506,8 @@ def verify_wheel(raw, item):
     record = prefix + "RECORD"
     meta = prefix + "METADATA"
     python_profile = c["package_profile"] == "python-service-v1"
+    # static-ui-service-v1: the static layout plus one registered Python package.
+    python_package = python_profile or c["package_profile"] == "static-ui-service-v1"
     if python_profile:
         installed = f"{c['wheel_basename']}-{version}.data/data/share/openhop/plugins/{c['plugin']}/"
         manifest_path = installed + "openhop-plugin.json"
@@ -534,6 +544,15 @@ def verify_wheel(raw, item):
     else:
         manifest_path = f"share/openhop/plugins/{c['plugin']}/openhop-plugin.json"
         required = {meta, record, "openhop-plugin.json", manifest_path, "ui/index.html"}
+        if python_package:
+            required.update(
+                {
+                    prefix + "WHEEL",
+                    prefix + "entry_points.txt",
+                    c["package_config"]["package_root"] + "/__init__.py",
+                    c["package_config"]["module"].replace(".", "/") + ".py",
+                }
+            )
         registered_assets = set()
     # Optional, explicitly registered UI assets are allowed for newer releases;
     # older approved versions need not contain them.
@@ -565,16 +584,16 @@ def verify_wheel(raw, item):
             require(
                 name in allowed
                 or (
-                    bool(
+                    python_package
+                    and bool(
                         re.fullmatch(
                             re.escape(c["package_config"]["package_root"])
                             + r"/[A-Za-z_][A-Za-z0-9_]*\.py",
                             name,
                         )
                     )
-                    if python_profile
-                    else name.startswith("ui/")
-                ),
+                )
+                or (not python_profile and name.startswith("ui/")),
                 "unexpected wheel member",
             )
         rows = csv.reader(io.StringIO(archive.read(record).decode("utf-8")))
@@ -618,7 +637,7 @@ def verify_wheel(raw, item):
             and manifest["ui"].get("entry") == "ui/index.html",
             "manifest entrypoint mismatch",
         )
-        if python_profile:
+        if python_package:
             import configparser
 
             require(
@@ -650,6 +669,12 @@ def verify_wheel(raw, item):
             metadata.get_all("Name") == [c["distribution"]]
             and metadata.get_all("Version") == [version],
             "distribution metadata mismatch",
+        )
+        # The digest pins this wheel alone; a dependency would be code it does not pin.
+        require(
+            c["package_profile"] != "static-ui-service-v1"
+            or metadata.get_all("Requires-Dist") is None,
+            "service wheel declares dependencies",
         )
 
 

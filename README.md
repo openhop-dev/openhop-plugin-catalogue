@@ -39,9 +39,10 @@ changes require current maintainer approval. Trusted-main registrations in
 [`approved-apps.json`](approved-apps.json) allow narrowly scoped `waev.outpost` and
 `openhop.nomad` release updates to qualify for the existing protected automatic
 merge pipeline without human review. A proposal cannot register itself or select
-its own package profile or configuration. Reusable `static-ui-v1` and
-`python-service-v1` profiles keep Python package/module and console-script contracts
-in trusted registration, so another app with the same layout needs no policy rewrite.
+its own package profile or configuration. Reusable `static-ui-v1`,
+`static-ui-service-v1` and `python-service-v1` profiles keep Python package/module
+and console-script contracts in trusted registration, so another app with the same
+layout needs no policy rewrite.
 The registry extension is local development until merged
 and verified on main; this documentation does not claim NOMAD automation is live.
 See the policy document for onboarding and operational prerequisites.
