@@ -11,8 +11,13 @@
       "publisher_login": "openhop-catalogue-publisher[bot]",
       "publisher_user_id": 325431437,
       "branch_prefix": "automation/waev-outpost-v",
-      "package_profile": "static-ui-v1",
-      "package_config": {},
+      "package_profile": "static-ui-service-v1",
+      "package_config": {
+        "package_root": "waev_outpost_recorder",
+        "module": "waev_outpost_recorder.__main__",
+        "console_script": "waev-outpost-recorder",
+        "callable": "main"
+      },
       "source_verification": "publisher-assertion",
       "release_assets": "wheel-only"
     },
