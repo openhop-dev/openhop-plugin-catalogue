@@ -185,6 +185,14 @@ trusted policy and current API data; a receipt for one app cannot authorize anot
   otherwise it enables native squash auto-merge. It never bypasses protection or
   falls back to a merge after an arbitrary API error. All writes are read back.
 
+Finalization writes each check result once, then reads that exact check immediately
+and, on a state mismatch, after waits of 1, 2 and 4 seconds. Every read must retain
+the expected policy App, check name, head SHA and external ID. Identity and API
+errors fail immediately; a persistent status/conclusion mismatch logs only the
+numeric check ID and allowlisted expected/observed state, then fails closed. These
+readback retries do not repeat the write or replace the subsequent live-policy
+recheck, and unconfirmed publication cannot enable automatic merging.
+
 Triggers are main-based `pull_request_target`, validation `workflow_run`, main
 push, manual dispatch and a 15-minute reconciliation schedule. No
 `pull_request_review` workflow executes PR code with secrets. Reconciliation

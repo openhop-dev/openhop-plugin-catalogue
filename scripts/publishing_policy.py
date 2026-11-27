@@ -12,6 +12,7 @@ import os
 import re
 import signal
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -28,6 +29,7 @@ SHA = re.compile(r"[0-9a-f]{40}")
 VERSION = re.compile(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)")
 MAX_JSON = 4 * 1024 * 1024
 MAX_WHEEL = 64 * 1024 * 1024
+CHECK_READBACK_DELAYS = (0, 1, 2, 4)
 
 
 class PolicyError(RuntimeError):
@@ -974,7 +976,8 @@ def create_pending(app, pr, main):
 
 def complete_check(app, target, allowed):
     path = f"/check-runs/{target['check_id']}"
-    check_identity(app.repo(path), target)
+    check = app.repo(path)
+    check_identity(check, target)
     conclusion = "success" if allowed else "failure"
     app.repo(
         path,
@@ -989,12 +992,40 @@ def complete_check(app, target, allowed):
             },
         },
     )
-    check = app.repo(path)
-    check_identity(check, target)
-    require(
-        check["status"] == "completed" and check["conclusion"] == conclusion,
-        "check readback mismatch",
+    # Retry only reads of the same check, never the completion write. A delayed
+    # state response cannot relax App/target identity or the final policy recheck.
+    for delay in CHECK_READBACK_DELAYS:
+        if delay:
+            time.sleep(delay)
+        check = app.repo(path)
+        check_identity(check, target)
+        if check.get("status") == "completed" and check.get("conclusion") == conclusion:
+            return
+    # Log only bounded enum values, never arbitrary API response content.
+    status = check.get("status")
+    if status not in ("queued", "in_progress", "completed"):
+        status = "unexpected"
+    observed_conclusion = check.get("conclusion")
+    if observed_conclusion not in (
+        None,
+        "action_required",
+        "cancelled",
+        "failure",
+        "neutral",
+        "skipped",
+        "stale",
+        "startup_failure",
+        "success",
+        "timed_out",
+    ):
+        observed_conclusion = "unexpected"
+    print(
+        f"Policy check readback mismatch: check_id={int(target['check_id'])} "
+        f"expected_status=completed expected_conclusion={conclusion} "
+        f"observed_status={status} observed_conclusion={observed_conclusion}",
+        file=sys.stderr,
     )
+    raise PolicyError("check readback mismatch")
 
 
 def enable_auto(api, receipt, target):
